@@ -1,0 +1,1 @@
+docker build -t "eeacms/virtuoso:dev" -f ./Dockerfile.dev .

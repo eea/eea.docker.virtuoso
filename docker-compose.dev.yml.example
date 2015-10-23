@@ -1,0 +1,13 @@
+datav:
+    image: busybox
+    volumes:
+        - /virtuoso_db/
+
+virtuoso:
+    image: eeacms/virtuoso:dev
+    ports:
+        - 8890:8890
+        - 1111:1111
+        - 1112:1112
+    volumes_from:
+        - datav
