@@ -10,3 +10,5 @@ virtuoso:
         - 1112:1112
     volumes_from:
         - datav
+    env_file:
+        - virtuoso.env
