@@ -3,7 +3,10 @@ var sparqlClient = require('sparql-client');
 var async = require('async');
 var stringify = require('csv-stringify');
 
-var _endpoint = "http://semantic.eea.europa.eu/sparql";  //"http://cr.eionet.europa.eu/sparql";
+var args = process.argv.slice(2);
+
+var _endpoint = '';
+var _filename = '';
 
 var MAIN_QUERY = "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> \
 	      PREFIX cr: <http://cr.eionet.europa.eu/ontologies/contreg.rdf#> \
@@ -13,13 +16,13 @@ var MAIN_QUERY = "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> \
 		?bookmark a cr:SparqlBookmark ;\
 			  rdfs:label ?label ;\
 			  cr:sparqlQuery ?query \
-	      } LIMIT 100";  // } LIMIT 50";
+	      } LIMIT 1";  // } LIMIT 50";
 
 var all_queries = [];	// all queries resulted from main query
 var all_results = [];	// all the results from making queries to each from all_queries
 var csv_string_rows = []; // all the rows of the result for saving in csv
 
-var delimiter = ',';  // 
+var delimiter = ',';
 var stringifier = stringify({ delimiter: delimiter });
 
 var header = [];
@@ -31,30 +34,36 @@ header.push('Nr of rows');
 
 csv_string_rows.push(stringifier.stringify(header) + '\n');
 
-
-console.log(all_queries);   // this will be empty because server hasn't been called yet. 
+console.log('Arguments:', args);
+// console.log(all_queries);   // this will be empty because server hasn't been called yet. 
                 // nodejs is all async
 
+var init = function () {
+  // Initialize endpoint and output file name
+  if (args.length != 2 || args[0].indexOf('http://') != 0) {
+    
+    throw new Error('Insert the correct arguments ! The execution script will stop.');
+  }
+  
+  _endpoint = args[0];  // "http://semantic.eea.europa.eu/sparql";
+  _filename = args[1];  // "query_results"
+}
 
 var call_server = function (query, endpoint, callbackfunction) {
-  // call the server and after the response is arrived it triggers callbackfunction
-  // Params: query - holds the query string 
-  //       endpoint - holds the URL endpoint string
+  // Calls the server and after the response is arrived it triggers callbackfunction
   
-    var client = new sparqlClient(endpoint);
+  var client = new sparqlClient(endpoint);
 
-    client.query(query).execute(function(error, results) {
+  client.query(query).execute(function(error, results) {
 
-	callbackfunction(error, results);
-    });
+    callbackfunction(error, results);
+  });
 };
 
 
-var handle_main_query_results = function(error, results) {
+var handle_main_query_results = function (error, results) {
   // Handler function for saving the MAIN_QUERY results in queryItem object and calls process_query
   //   for processing action
-  // Params: error - holds server errors
-  // 	   results - holds server response
 
   var res = results.results.bindings;
   var heads = results.head.vars;
@@ -72,16 +81,12 @@ var handle_main_query_results = function(error, results) {
   }
 
   process_query(0, all_queries[0].label);
-  
-  //console.log("Got queries: ", all_queries.length);
 };
 
 
-var handle_secondary_query_result = function(error, results) {
+var handle_secondary_query_result = function (error, results) {
   // Handler function for saving the secondary queries results in all_results array for processing 
   //   action
-  // Params: error - holds server errors
-  // 	   results - holds server response
 
   var item = {};
   item.label = all_queries[all_results.length].label;
@@ -94,31 +99,29 @@ var handle_secondary_query_result = function(error, results) {
   }
   
   all_results.push(item);
-  console.log(all_results.length);
+  console.log('');  // all_results.length
   
   if (all_results.length >= all_queries.length) {
-  
     process_query(all_results.length, '');
+    
   } else {
-  
     process_query(all_results.length, all_queries[all_results.length].label);
   }
 };
 
+
 var global_index;
 
-var abc = function() { 
+var call_server_default = function() {
+  // Wrapper function for setTimeout caller 
   call_server(all_queries[global_index].query, _endpoint, handle_secondary_query_result);
-}
+};
 
-var process_query = function(index, label){
+
+var process_query = function (index, label) {
   // After calling all the queries responses, it parses the secondary results and saves them
-  // Params: index - holds the index of result
-  
-  //console.log('all_results', index);
   if (index > all_queries.length - 1) {
     // all secondary queries are processed; now saving to csv
-    // console.log("Processing query", index);
     console.log("All results length: ", all_results.length);
     
     parse_results(all_results);
@@ -128,37 +131,35 @@ var process_query = function(index, label){
   console.log("Processing query", index, label);
   
   global_index = index;
-  setTimeout(abc, 0);
-  
+  setTimeout(call_server_default, 0);
 };
 
 
 var parse_results = function(items) {
-  // Parse each results and after it calls
-  // Params: items - holds the array of secondary results
-  
+  // Parses results and saves them
   async.each(items, 
+	     
     function(item, callback){
-      save_to_Array(item);
+      save_to_array(item);
       callback();
     },
+    
     function(err){
+      // Is called when all items have been processed
       var csv_string = stringifier.stringify(csv_string_rows);
-      // console.log(csv_string_rows);
       console.log('Done parsing !');
     }
+    
   );
 };
 
 
-var save_to_Array = function(item){
-  // Saves the item result in csv_string_rows array
-  
+var save_to_array = function(item) {
+  // Saves the secondary result item in csv_string_rows array
   var row = [];
   var csv_row = '';
   
   if (item.binds === 'error' || item.binds.length <= 0) {
-
     row.push(item.label);
     row.push(0);
     row.push('-');
@@ -169,7 +170,7 @@ var save_to_Array = function(item){
     
     csv_string_rows.push(csv_row);
     
-    return;
+    return
   }
   
   var label = item.label;
@@ -193,17 +194,18 @@ var save_to_Array = function(item){
 
 
 var save_to_csv = function() {
-  // Saves the csv_string_rows array in queryResults.csv file
+  // Saves the csv_string_rows array in output file
   
   var fs = require('fs');
+  var filename = './' + _filename + '.csv';
   
-  fs.writeFile('./queryResults.csv', csv_string_rows, function (err, data) {
-      if (err) {
-	  return console.log(err);
-      }
+  fs.writeFile(filename, csv_string_rows, function (err, data) {
+    if (err) {
+      return console.log(err);
+    }
       console.log('Results succesfully saved !');
   });
 };
 
-
+init();
 call_server(MAIN_QUERY, _endpoint, handle_main_query_results);
