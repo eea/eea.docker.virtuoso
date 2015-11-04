@@ -1,0 +1,22 @@
+{
+  "name": "virtuoso",
+  "version": "0.0.1",
+  "description": "EEA Virtuoso test script",
+  "dependencies" : {
+    "sparql-client": "*",
+    "async": "*",
+    "csv-stringify": "*"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/eea/eea.docker.virtuoso.git"
+  },
+  "keywords": [
+    "node",
+    "EEA",
+    "virtuoso"
+  ],
+  "author": "Razvan Popa",
+  "license": "GPL-2.0",
+  "readmeFilename": "README.md"
+}
