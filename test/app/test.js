@@ -1,4 +1,4 @@
-
+#!/usr/bin/env node
 
 var sparqlClient = require('sparql-client');
 var async = require('async');
@@ -9,7 +9,7 @@ var args = process.argv.slice(2);
 var _endpoint = '';
 var _filename = '';
 
-var MAIN_QUERY = "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> \
+var MAIN_QUERY = 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> \
 	      PREFIX cr: <http://cr.eionet.europa.eu/ontologies/contreg.rdf#> \
 	      \
 	      SELECT ?label, ?query \
@@ -17,27 +17,15 @@ var MAIN_QUERY = "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> \
 		?bookmark a cr:SparqlBookmark ;\
 			  rdfs:label ?label ;\
 			  cr:sparqlQuery ?query \
-	      } LIMIT 10";  // } LIMIT 50";
+	      } LIMIT 115';
 
-var all_queries = [];	// all queries resulted from main query
-var all_results = [];	// all the results from making queries to each from all_queries
-var csv_string_rows = []; // all the rows of the result for saving in csv
+var all_queries = []; // all queries resulted from main query
+var query_labels = {};
+var query_counts = {};
 
 var delimiter = ',';
 var stringifier = stringify({ delimiter: delimiter });
 
-var header = [];
-header.push('-');
-header.push('Label');
-header.push('Nr of Columns');
-header.push('Columns names');
-header.push('Nr of rows');
-
-csv_string_rows.push(stringifier.stringify(header) + '\n');
-
-console.log('Arguments:', args);
-// console.log(all_queries);   // this will be empty because server hasn't been called yet. 
-                // nodejs is all async
 
 var init = function () {
   // Initialize endpoint and output file name
@@ -50,24 +38,21 @@ var init = function () {
   _filename = args[1];  // "query_results"; // 
 }
 
+
 var call_server = function (query, endpoint, callbackfunction) {
   // Calls the server and after the response is arrived it triggers callbackfunction
   
   var client = new sparqlClient(endpoint);
-
-  client.query(query).execute(function(error, results) {
-
-    callbackfunction(error, results);
+  client.query(query).execute(function(error, response) {
+    callbackfunction(error, response);
   });
 };
 
 
-var handle_main_query_results = function (error, results) {
-  // Handler function for saving the MAIN_QUERY results in queryItem object and calls process_query
-  //   for processing action
-
-  var res = results.results.bindings;
-  var heads = results.head.vars;
+var make_all_queries = function(error, response) {
+  
+  var res = response.results.bindings;
+  var heads = response.head.vars;
 
   for (var i = 0; i < res.length; i++){
     
@@ -80,132 +65,166 @@ var handle_main_query_results = function (error, results) {
     }
     all_queries.push(queryItem);
   }
-
-  process_query(0, all_queries[0].label);
-};
-
-
-var handle_secondary_query_result = function (error, results) {
-  // Handler function for saving the secondary queries results in all_results array for processing 
-  //   action
-
-  var item = {};
-  item.label = all_queries[all_results.length].label;
   
-  if (!results) {  
-    item.binds = 'error';
-    
-  } else {
-    item.binds = results.results.bindings;
-  }
-  
-  all_results.push(item);
-  console.log('');  // all_results.length
-  
-  if (all_results.length >= all_queries.length) {
-    process_query(all_results.length, '');
-    
-  } else {
-    process_query(all_results.length, all_queries[all_results.length].label);
-  }
-};
+  process_all_queries_step_1();
+}
 
 
-var global_index;
-
-var call_server_default = function() {
-  // Wrapper function for setTimeout caller 
-  call_server(all_queries[global_index].query, _endpoint, handle_secondary_query_result);
-};
+var process_all_queries_step_1 = function() {
+  async.each(all_queries, get_query_counts, process_all_queries_step_2);
+}
 
 
-var process_query = function (index, label) {
-  // After calling all the queries responses, it parses the secondary results and saves them
-  if (index > all_queries.length - 1) {
-    // all secondary queries are processed; now saving to csv
-    console.log("All results length: ", all_results.length);
-    
-    parse_results(all_results);
-    save_to_csv();
-    return
-  }
-  console.log("Processing query", index, label);
-  
-  global_index = index;
-  setTimeout(call_server_default, 0);
-};
+var process_all_queries_step_2 = function(err) {
+  async.each(all_queries, get_query_labels, save_to_csv);
+}
 
 
-var parse_results = function(items) {
-  // Parses results and saves them
-  async.each(items, 
-	     
-    function(item, callback){
-      save_to_array(item);
+var get_query_counts = function(item, callback) {
+  //
+  var result_query = modify_query_rows(item.query);
+  call_server(
+    result_query, 
+    _endpoint, 
+    function(error, response){ 
+      console.log("Processing query:", all_queries.indexOf(item) + 1, item.label);
+      save_query_counts(item.query, error, response); 
       callback();
-    },
-    
-    function(err){
-      // Is called when all items have been processed
-      var csv_string = stringifier.stringify(csv_string_rows);
-      console.log('Done parsing !');
     }
-    
   );
-};
+}
 
 
-var save_to_array = function(item) {
-  // Saves the secondary result item in csv_string_rows array
-  var row = [];
-  var csv_row = '';
+var modify_query_rows = function(query) {
+  // 
+  var retSelect;
   
-  if (item.binds === 'error' || item.binds.length <= 0) {
-    row.push(item.label);
-    row.push(0);
-    row.push('-');
-    row.push(0);
+  if (query.indexOf('LIMIT') > -1) {
+    retSelect = query.slice(0, query.indexOf('LIMIT'));
+    retSelect = [retSelect.slice(0, retSelect.indexOf('SELECT')), 
+		   'SELECT count(*) as ?nrOfRows where {{', 
+		   retSelect.slice(retSelect.indexOf('SELECT'))].join(' ');
+    retSelect += ' }}';
     
-    csv_row = stringifier.stringify(row);
-    csv_row += '\n';
-    
-    csv_string_rows.push(csv_row);
-    
-    return
+    return retSelect;
   }
   
-  var label = item.label;
-  var nrOfRows = item.binds.length;
-  var sortedColumns = Object.keys(item.binds[0]).sort();
-  var nrOfCols = Object.keys(item.binds[0]).length;
+  retSelect = [query.slice(0, query.indexOf('SELECT')), 
+		   'SELECT count(*) as ?nrOfRows where {{', 
+		   query.slice(query.indexOf('SELECT'))].join(' ');
+  retSelect += ' }}';
   
-  sortedColumns = sortedColumns.join(';  ');
-  
-  row.push(label);
-  row.push(nrOfCols);
-  row.push(sortedColumns);
-  row.push(nrOfRows);
-  
-  csv_row = stringifier.stringify(row);
-  csv_row += '\n';
-  
-  csv_string_rows.push(csv_row);
-  
-};
+  return retSelect;
+}
 
 
-var save_to_csv = function() {
-  // Saves the csv_string_rows array in output file
+var get_query_labels = function(item, callback) {
+  //console.log(item);
+  var result_query = modify_query_for_columns(item.query);
   
+  //console.log(result_query);
+  call_server(
+    result_query, 
+    _endpoint, 
+    function(error, response){ 
+      console.log("Processing query:", all_queries.indexOf(item) + 1, item.label);
+      save_query_label(item.query, error, response);
+      callback();
+    }
+  );
+}
+
+
+var modify_query_for_columns = function(query) {
+  var retSelect = query;
+  
+  if ( retSelect.indexOf('LIMIT') == -1) {
+    retSelect += ' LIMIT 1';
+  }
+  return retSelect;
+}
+
+
+var save_query_counts = function(query, error, response) {
+  // parse response
+  if (!response || response.results.bindings.length == 0) {  
+    query_counts[query] = [];
+    
+  } else {
+    query_counts[query] = response.results.bindings[0].nrOfRows.value;
+  }
+  
+}
+
+
+var save_query_label = function(query, error, response) {
+  // parse response
+  if (!response || response.results.bindings.length == 0) {  
+    query_labels[query] = [];
+    
+  } else {
+    query_labels[query] = [];
+    
+    var nrOfRows = response.results.bindings.length;
+    var sortedColumns = Object.keys(response.results.bindings[0]).sort();
+    var nrOfCols = Object.keys(response.results.bindings[0]).length;
+    
+    query_labels[query].push(nrOfRows);
+    query_labels[query].push(sortedColumns);
+    query_labels[query].push(nrOfCols);
+  }
+  
+}
+
+
+var save_to_csv = function(error) {
+  
+  var csv_rows = [];
+  var header = [];
+  header.push('-');
+  header.push('Label');
+  //header.push('Nr of Columns');
+  header.push('Columns names');
+  header.push('Nr of rows');
+
+  csv_rows.push(stringifier.stringify(header) + '\n');
+  
+  var bookmark_names = {};
+  
+  for (var i = 0; i < all_queries.length; i++) {
+    var label = all_queries[i].label;
+    var query = all_queries[i].query;
+    
+    bookmark_names[query] = label;
+  }
+  
+  for (var name in query_counts) {
+    /*console.log('\n-------');
+    console.log(bookmark_names[name]);
+    console.log(query_counts[name]);*/
+    
+    var columns = (query_labels[name][1] || []).join(',');
+    var row = [bookmark_names[name], columns, query_counts[name]];
+    csv_rows.push(stringifier.stringify(row) + '\n');
+    //console.log(columns);
+  }
+  
+  save_csv_file(csv_rows);
+}
+
+
+var save_csv_file = function(csv_rows) {
+  //console.log(csv_rows);
   var fs = require('fs');
   
-  fs.writeFile(_filename, csv_string_rows, function (err, data) {
+  fs.writeFile(_filename, csv_rows, function (err, data) {
     if (err) {
       return console.log(err);
     }
-      console.log('Results succesfully saved !');
+      console.log('\nResults succesfully saved !');
   });
-};
+}
+
 
 init();
-call_server(MAIN_QUERY, _endpoint, handle_main_query_results);
+call_server(MAIN_QUERY, _endpoint, make_all_queries);
