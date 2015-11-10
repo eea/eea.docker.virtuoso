@@ -1,7 +1,10 @@
 #!/usr/bin/env node
 /*
- * The script saves all bookmarked queries in a list and executes each twice.
- * First modifies each SPARQL query for getting number of rows and second modifies for saving the columns
+ * The script saves in a csv file the labels, number of fields, fields name 
+ * and number of rows from MAIN_QUERY and MAIN_QUERY_2 responses.
+ * It saves all bookmarked queries in a list and executes them twice;
+ * First time it modifies each SPARQL query for getting the number of rows and
+ * second time, it modifies them to save the columns.
  * 
  */
 var sparqlClient = require('sparql-client');
@@ -30,7 +33,7 @@ var MAIN_QUERY = 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> \
 		?bookmark a cr:SparqlBookmark ;\
 			  rdfs:label ?label ;\
 			  cr:sparqlQuery ?query \
-	      } '; // LIMIT 150
+	      } LIMIT 150'; // LIMIT 150
 
 var MAIN_QUERY_2 = 'PREFIX pt: <http://www.eea.europa.eu/portal_types/Sparql#> \
 	      PREFIX dct: <http://purl.org/dc/terms/> \
@@ -42,7 +45,7 @@ var MAIN_QUERY_2 = 'PREFIX pt: <http://www.eea.europa.eu/portal_types/Sparql#> \
 		pt:endpoint_url ?endpoint; \
 		dct:title ?title \
 		FILTER regex(?endpoint, "semantic.eea.europa.eu") \
-	      } ';
+	      } LIMIT 100'; // LIMIT 100
 
 var all_queries = []; // all queries resulted from main query
 var query_labels = {};
@@ -80,7 +83,6 @@ var call_server = function(query, endpoint, onsuccess, onerror) {
 
 var make_all_queries = function(response) {
   // Parse the response of MAIN_QUERY execution
-  
   var res = response.results.bindings;
   var heads = response.head.vars;
 
@@ -98,14 +100,15 @@ var make_all_queries = function(response) {
 
 
 var make_all_queries_1 = function(response) {
+  // Populates all_queries array from MAIN_QUERY
   make_all_queries(response);
   main_query_2();
 }
 
 
 var make_all_queries_2 = function(response) {
+  // Populates all_queries array from MAIN_QUERY_2
   make_all_queries(response);
-  console.log(all_queries);
   process_all_queries_step_1();
 }
 
@@ -134,7 +137,7 @@ var process_all_queries_step_1 = function() {
     filtered = all_queries;
   } 
   
-  async.each(filtered, get_query_counts, process_all_queries_step_2);
+  async.eachSeries(filtered, get_query_counts, process_all_queries_step_2);
 };
 
 
@@ -148,7 +151,7 @@ var process_all_queries_step_2 = function(err) {
     filtered = all_queries;
   } 
   
-  async.each(filtered, get_query_labels, save_to_csv);
+  async.eachSeries(filtered, get_query_labels, save_to_csv);
 };
 
 
@@ -170,8 +173,7 @@ var modify_query_rows = function(query) {
 		 'SELECT count(*) as ?nrOfRows where {{', 
 		 query.slice(query.indexOf('SELECT'))].join(' ');
   retSelect += ' }}';
-  console.log('-------------------------');
-  console.log(retSelect);
+  
   return retSelect;
 };
 
@@ -197,7 +199,7 @@ var get_query_counts = function(item, callback) {
     },
     
     function(errors){
-      console.log(errors.toString());
+      console.log('Processing query:', all_queries.indexOf(item) + 1, errors.toString());
       query_counts[item.query] = errors.toString();
       return callback();
     }
@@ -212,8 +214,8 @@ var modify_query_for_columns = function(query) {
   retSelect = [query.slice(0, query.indexOf('SELECT')), 
 		 'SELECT * where {{', 
 		 query.slice(query.indexOf('SELECT'))].join(' '); 
-  retSelect += "}} LIMIT 1";
-  console.log(retSelect);
+  retSelect += ' }} LIMIT 1';
+  // console.log(retSelect);
   return retSelect;
 };
 
@@ -233,13 +235,13 @@ var get_query_labels = function(item, callback) {
     _endpoint, 
     
     function(response){ 
-      console.log("Processing query:", all_queries.indexOf(item) + 1, item.label);
+      console.log('Processing query:', all_queries.indexOf(item) + 1, item.label);
       save_query_label(item.query, response);
       return callback();
     },
     
     function(errors){
-      console.log(errors.toString());
+      console.log('Processing query:', all_queries.indexOf(item) + 1, errors.toString());
       query_labels[item.query] = [errors.toString()];
       return callback();
     }
@@ -300,7 +302,6 @@ var save_to_csv = function(error) {
     csv_rows.push(stringifier.stringify(row) + '\n');
   }
   
-  // console.log("csv_rows\n", csv_rows);
   save_csv_file(csv_rows);
 };
 
@@ -313,12 +314,13 @@ var save_csv_file = function(csv_rows) {
     if (err) {
       return console.log(err);
     }
-      console.log('\nResults succesfully saved !');
+    console.log('\nResults succesfully saved !');
   });
 };
 
 
 var main_query_2 = function() {
+  // 
   call_server(MAIN_QUERY_2, _endpoint, make_all_queries_2, function(errors){
     console.log('Errors for main query 2');
   });
