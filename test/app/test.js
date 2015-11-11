@@ -33,7 +33,7 @@ var MAIN_QUERY = 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> \
 		?bookmark a cr:SparqlBookmark ;\
 			  rdfs:label ?label ;\
 			  cr:sparqlQuery ?query \
-	      } LIMIT 150'; // LIMIT 150
+	      } '; // LIMIT 150
 
 var MAIN_QUERY_2 = 'PREFIX pt: <http://www.eea.europa.eu/portal_types/Sparql#> \
 	      PREFIX dct: <http://purl.org/dc/terms/> \
@@ -45,7 +45,7 @@ var MAIN_QUERY_2 = 'PREFIX pt: <http://www.eea.europa.eu/portal_types/Sparql#> \
 		pt:endpoint_url ?endpoint; \
 		dct:title ?title \
 		FILTER regex(?endpoint, "semantic.eea.europa.eu") \
-	      } LIMIT 100'; // LIMIT 100
+	      } '; // LIMIT 100
 
 var all_queries = []; // all queries resulted from main query
 var query_labels = {};
