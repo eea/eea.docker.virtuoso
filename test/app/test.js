@@ -19,7 +19,9 @@ var _filename = '';
 var DEBUG = false; // set true for debugging 
 
 var problems = [
-    "MDI2_indicSpecifications_and_related_rod_data"
+    "MDI2_indicSpecifications_and_related_rod_data",
+    "Change in Final Energy Consumption by Transport Mode, EEA33, 1990-2013",
+    "Change in Greenhouse gas emissions by EU Member State,2000,2011"
     ];
 /*    "Simple SPARQL query on demo_gind",
     "SPARQL query on nrg_101a with joins on dictionaries",
@@ -217,6 +219,7 @@ var modify_query_rows = function(query) {
 };
 
 
+var step_counts = 1;
 var get_query_counts = function(item, callback) {
   // Executes modified query and saves number of rows
   /*
@@ -225,6 +228,13 @@ var get_query_counts = function(item, callback) {
       return callback();
   }
   */
+  
+  if (step_counts < 5 ) {
+    step_counts += 1;
+    return callback();
+  }
+  step_counts = 1;
+  
   var result_query = modify_query_rows(item.query);
   //console.log('Start timeout:', Date.now());
   setTimeout(
@@ -264,6 +274,7 @@ var modify_query_for_columns = function(query) {
 };
 
 
+var step_labels = 1;
 var get_query_labels = function(item, callback) {
   // Executes modified query and saves columns 
   /*
@@ -272,6 +283,13 @@ var get_query_labels = function(item, callback) {
       return callback();
   }
   */
+  
+  if (step_labels < 5) {
+    step_labels += 1;
+    return callback();
+  }
+  step_labels = 1;
+  
   var result_query = modify_query_for_columns(item.query);
   
   call_server(
