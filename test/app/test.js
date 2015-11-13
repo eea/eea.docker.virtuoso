@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /*
  * The script saves in a csv file the labels, number of fields, fields name 
- * and number of rows from MAIN_QUERY and MAIN_QUERY_2 responses.
+ * and number of rows from all main queries responses.
  * It saves all bookmarked queries in a list and executes them twice;
  * First time it modifies each SPARQL query for getting the number of rows and
  * second time, it modifies them to save the columns.
@@ -19,11 +19,14 @@ var _filename = '';
 var DEBUG = false; // set true for debugging 
 
 var problems = [
-    "Simple SPARQL query on demo_gind",
+    "MDI2_indicSpecifications_and_related_rod_data"
+    ];
+/*    "Simple SPARQL query on demo_gind",
     "SPARQL query on nrg_101a with joins on dictionaries",
     "SPARQL query on namq_aux_pem with joins on dictionaries",
-    "Simple SPARQL query on tsdtr310"
-    ];
+    "Simple SPARQL query on tsdtr310",
+ */
+
 
 var MAIN_QUERY = 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> \
 	      PREFIX cr: <http://cr.eionet.europa.eu/ontologies/contreg.rdf#> \
@@ -33,19 +36,23 @@ var MAIN_QUERY = 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> \
 		?bookmark a cr:SparqlBookmark ;\
 			  rdfs:label ?label ;\
 			  cr:sparqlQuery ?query \
-	      } '; // LIMIT 150
+	      } ORDER BY ?label '; // LIMIT 150
 
 var MAIN_QUERY_2 = 'PREFIX pt: <http://www.eea.europa.eu/portal_types/Sparql#> \
 	      PREFIX dct: <http://purl.org/dc/terms/> \
 	      \
-	      SELECT (?title as ?label) ?query \
+	      SELECT (?title as ?label), ?query \
 	      WHERE { \
 		?type a pt:Sparql; \
 		pt:sparql_query ?query; \
 		pt:endpoint_url ?endpoint; \
 		dct:title ?title \
 		FILTER regex(?endpoint, "semantic.eea.europa.eu") \
-	      } '; // LIMIT 100
+	      } ORDER BY ?title '; // LIMIT 100
+
+var main_queries = [];
+main_queries.push(MAIN_QUERY);
+main_queries.push(MAIN_QUERY_2);
 
 var all_queries = []; // all queries resulted from main query
 var query_labels = {};
@@ -72,6 +79,7 @@ var call_server = function(query, endpoint, onsuccess, onerror) {
   
   var client = new sparqlClient(endpoint, {});
   var callback = function(errors, results){
+    
       if (errors) {
         return onerror(errors);
       }
@@ -81,8 +89,9 @@ var call_server = function(query, endpoint, onsuccess, onerror) {
 };
 
 
-var make_all_queries = function(response) {
+var make_all_queries = function(response, unique_prefix_query) {
   // Parse the response of MAIN_QUERY execution
+  
   var res = response.results.bindings;
   var heads = response.head.vars;
 
@@ -91,7 +100,12 @@ var make_all_queries = function(response) {
     for (var j = 0; j < heads.length; j++){
 
       if (res[i][heads[j]] !== undefined){
-	queryItem[heads[j]] = res[i][heads[j]].value;  
+	queryItem[heads[j]] = res[i][heads[j]].value;
+      } 
+      if (res[i][heads[j]] !== undefined && heads[j] === 'query') {
+	// prevent to have 2 or more properties with same key query
+	queryItem[heads[j]] = '#'+ unique_prefix_query + i + '\r\n ' 
+		      + res[i][heads[j]].value;
       }
     }
     all_queries.push(queryItem);
@@ -99,44 +113,73 @@ var make_all_queries = function(response) {
 };
 
 
-var make_all_queries_1 = function(response) {
+var make_all_main_queries = function() {
   // Populates all_queries array from MAIN_QUERY
-  make_all_queries(response);
-  main_query_2();
+  
+  async.eachSeries(
+    main_queries, 
+    
+    function(item, callback) {
+      call_server(
+	item, 
+	_endpoint, 
+	
+	function(response){ 
+	  // console.log(item);
+	  make_all_queries(response, 'mq_' + main_queries.indexOf(item) + '_');
+	  return callback();
+	},
+	
+	function(errors){
+	  console.log('Error in main query:', errors.toString(), item);
+	  return callback();
+	}
+      );
+    },
+    
+    function(error) {
+      //console.log('ALL QUERIES LENGTH: ', all_queries.length);
+      process_all_queries_step_1('');
+    }
+    
+  );
 }
 
 
-var make_all_queries_2 = function(response) {
-  // Populates all_queries array from MAIN_QUERY_2
-  make_all_queries(response);
-  process_all_queries_step_1();
-}
-
-
-var get_filtered_queries = function(){
+var get_filtered_queries = function(include_problems) {
   // useful in debugging, only process a limited set of queries
   
   var res = [];
-  for (var i = 0; i<all_queries.length;i++){
-    var q = all_queries[i];
-    if (problems.indexOf(q.label) > -1) {
-	res.push(q);
+  
+  if (DEBUG) {
+    for (var i = 0; i < all_queries.length; i++) {
+      var q = all_queries[i];
+      if (problems.indexOf(q.label) > -1) {
+	  res.push(q);
+      }
     }
+  } else if(!include_problems) {
+    for (var i = 0; i < all_queries.length; i++) {
+      var q = all_queries[i];
+      if (problems.indexOf(q.label) == -1) {
+	  res.push(q);
+      }
+    }
+  } else {
+    res = all_queries;
   }
+  
   return res;
 }; 
 
 
-var process_all_queries_step_1 = function() {
+var process_all_queries_step_1 = function(err) {
     // Process each query for saving number of rows
   var filtered;
-  if (DEBUG) {
-    filtered = get_filtered_queries();
-    
-  } else {
-    filtered = all_queries;
-  } 
-  
+
+  filtered = get_filtered_queries(false);
+
+  //console.log('all_queries length', filtered.length);
   async.eachSeries(filtered, get_query_counts, process_all_queries_step_2);
 };
 
@@ -144,13 +187,9 @@ var process_all_queries_step_1 = function() {
 var process_all_queries_step_2 = function(err) {
   // Process each query for saving columns
   var filtered;
-  if (DEBUG) {
-    filtered = get_filtered_queries();
-    
-  } else {
-    filtered = all_queries;
-  } 
-  
+
+  filtered = get_filtered_queries(false);
+
   async.eachSeries(filtered, get_query_labels, save_to_csv);
 };
 
@@ -187,22 +226,27 @@ var get_query_counts = function(item, callback) {
   }
   */
   var result_query = modify_query_rows(item.query);
-
-  call_server(
-    result_query, 
-    _endpoint, 
-    
-    function(response){ 
-      console.log("Processing query:", all_queries.indexOf(item) + 1, item.label);
-      save_query_counts(item.query, response); 
-      return callback();
-    },
-    
-    function(errors){
-      console.log('Processing query:', all_queries.indexOf(item) + 1, errors.toString());
-      query_counts[item.query] = errors.toString();
-      return callback();
-    }
+  //console.log('Start timeout:', Date.now());
+  setTimeout(
+    call_server(
+      result_query, 
+      _endpoint, 
+      
+      function(response){ 
+	console.log("Processing query:", all_queries.indexOf(item) + 1, item.label);
+	//console.log('End timeout:', Date.now());
+	save_query_counts(item.query, response); 
+	return callback();
+      },
+      
+      function(errors){
+	console.log('Processing query:', all_queries.indexOf(item) + 1, errors.toString());
+	//console.log('End timeout:', Date.now());
+	query_counts[item.query] = errors.toString();
+	return callback();
+      }
+    ),
+    1500
   );
 };
 
@@ -319,15 +363,6 @@ var save_csv_file = function(csv_rows) {
 };
 
 
-var main_query_2 = function() {
-  // 
-  call_server(MAIN_QUERY_2, _endpoint, make_all_queries_2, function(errors){
-    console.log('Errors for main query 2');
-  });
-}
-
-
 init();
-call_server(MAIN_QUERY, _endpoint, make_all_queries_1, function(errors){
-    console.log('Errors for main query');
-});
+make_all_main_queries();
+

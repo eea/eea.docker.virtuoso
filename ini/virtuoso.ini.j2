@@ -22,21 +22,23 @@
 ;  Database setup
 ;
 [Database]
-DatabaseFile			= {{ VIRTUOSO_DB_PATH | default('/usr/local/virtuoso-opensource/var/lib/virtuoso/db') }}/virtuoso.db
-ErrorLogFile			= {{ VIRTUOSO_DB_PATH | default('/usr/local/virtuoso-opensource/var/lib/virtuoso/db') }}/virtuoso.log
-LockFile			= {{ VIRTUOSO_DB_PATH | default('/usr/local/virtuoso-opensource/var/lib/virtuoso/db') }}/virtuoso.lck
-TransactionFile			= {{ VIRTUOSO_DB_PATH | default('/usr/local/virtuoso-opensource/var/lib/virtuoso/db') }}/virtuoso.trx
-xa_persistent_file		= {{ VIRTUOSO_DB_PATH | default('/usr/local/virtuoso-opensource/var/lib/virtuoso/db') }}/virtuoso.pxa
+DatabaseFile			= {{ VIRTUOSO_DB_PATH | default('/var/local/virtuoso/var/lib/virtuoso/db') }}/virtuoso.db
+ErrorLogFile			= {{ VIRTUOSO_DB_PATH | default('/var/local/virtuoso/var/lib/virtuoso/db') }}/virtuoso.log
+LockFile			= {{ VIRTUOSO_DB_PATH | default('/var/local/virtuoso/var/lib/virtuoso/db') }}/virtuoso.lck
+TransactionFile			= {{ VIRTUOSO_DB_PATH | default('/var/local/virtuoso/var/lib/virtuoso/db') }}/virtuoso.trx
+xa_persistent_file		= {{ VIRTUOSO_DB_PATH | default('/var/local/virtuoso/var/lib/virtuoso/db') }}/virtuoso.pxa
 ErrorLogLevel			= 7
 FileExtend			= 200
-MaxCheckpointRemap		= 2000
+;If running with a large database, setting MaxCheckpointRemap to 1/4th of the database size is recommended.
+;MaxCheckpointRemap		= 2000
+MaxCheckpointRemap		= 15000
 Striping			= 0
 TempStorage			= TempDatabase
 
 
 [TempDatabase]
-DatabaseFile			= {{ VIRTUOSO_DB_PATH | default('/usr/local/virtuoso-opensource/var/lib/virtuoso/db') }}/virtuoso-temp.db
-TransactionFile			= {{ VIRTUOSO_DB_PATH | default('/usr/local/virtuoso-opensource/var/lib/virtuoso/db') }}/virtuoso-temp.trx
+DatabaseFile			= {{ VIRTUOSO_DB_PATH | default('/var/local/virtuoso/var/lib/virtuoso/db') }}/virtuoso-temp.db
+TransactionFile			= {{ VIRTUOSO_DB_PATH | default('/var/local/virtuoso/var/lib/virtuoso/db') }}/virtuoso-temp.trx
 MaxCheckpointRemap		= 2000
 Striping			= 0
 
@@ -55,78 +57,43 @@ DisableTcpSocket		= 0
 ;X509ClientVerify		= 0
 ;X509ClientVerifyDepth		= 0
 ;X509ClientVerifyCAFile		= ca.pem
-MaxClientConnections		= 10
+ServerThreads			= 20
 CheckpointInterval		= 60
 O_DIRECT			= 0
+;NumberOfBuffers
+;For a database-only server about 65% of available RAM could be configured for database buffers.
+;Each buffer caches one 8K page of data and occupies approximately 8700 bytes of memory.
+;NumberOfBuffers			= 5000
+NumberOfBuffers			= 200000
+;MaxDirtyBuffers			= 3200
+MaxDirtyBuffers			= 50000
 CaseMode			= 2
 MaxStaticCursorRows		= 5000
 CheckpointAuditTrail		= 0
 AllowOSCalls			= 0
 SchedulerInterval		= 10
-DirsAllowed			= ., /usr/local/virtuoso-opensource/share/virtuoso/vad
+DirsAllowed			= ., /var/local/virtuoso/share/virtuoso/vad, /var/tmp, /var/local/cr3/files, /var/backups/sql
 ThreadCleanupInterval		= 0
 ThreadThreshold			= 10
 ResourcesCleanupInterval	= 0
 FreeTextBatchSize		= 100000
 SingleCPU			= 0
-VADInstallDir			= /usr/local/virtuoso-opensource/share/virtuoso/vad/
+VADInstallDir			= /var/local/virtuoso/share/virtuoso/vad/
 PrefixResultNames               = 0
 RdfFreeTextRulesSize		= 100
 IndexTreeMaps			= 256
-MaxMemPoolSize                  = 200000000
-PrefixResultNames               = 0
-MacSpotlight                    = 0
-IndexTreeMaps                   = 64
-MaxQueryMem 		 	= 2G		; memory allocated to query processor
-VectorSize 		 	= 1000		; initial parallel query vector (array of query operations) size
-MaxVectorSize 		 	= 1000000	; query vector size threshold.
-AdjustVectorSize 	 	= 0
-ThreadsPerQuery 	 	= 4
-AsyncQueueMaxThreads 	 	= 10
-;;
-;; When running with large data sets, one should configure the Virtuoso
-;; process to use between 2/3 to 3/5 of free system memory and to stripe
-;; storage on all available disks.
-;;
-;; Uncomment next two lines if there is 2 GB system memory free
-;NumberOfBuffers          = 170000
-;MaxDirtyBuffers          = 130000
-;; Uncomment next two lines if there is 4 GB system memory free
-;NumberOfBuffers          = 340000
-; MaxDirtyBuffers          = 250000
-;; Uncomment next two lines if there is 8 GB system memory free
-;NumberOfBuffers          = 680000
-;MaxDirtyBuffers          = 500000
-;; Uncomment next two lines if there is 16 GB system memory free
-;NumberOfBuffers          = 1360000
-;MaxDirtyBuffers          = 1000000
-;; Uncomment next two lines if there is 32 GB system memory free
-;NumberOfBuffers          = 2720000
-;MaxDirtyBuffers          = 2000000
-;; Uncomment next two lines if there is 48 GB system memory free
-;NumberOfBuffers          = 4000000
-;MaxDirtyBuffers          = 3000000
-;; Uncomment next two lines if there is 64 GB system memory free
-;NumberOfBuffers          = 5450000
-;MaxDirtyBuffers          = 4000000
-;;
-;; Note the default settings will take very little memory
-;; but will not result in very good performance
-;;
-NumberOfBuffers          = 10000
-MaxDirtyBuffers          = 6000
+
 
 
 [HTTPServer]
 ServerPort			= 8890
-ServerRoot			= /usr/local/virtuoso-opensource/var/lib/virtuoso/vsp
-MaxClientConnections		= 10
+ServerRoot			= /var/local/virtuoso/var/lib/virtuoso/vsp
+ServerThreads			= 20
 DavRoot				= DAV
 EnabledDavVSP			= 0
 HTTPProxyEnabled		= 0
 TempASPXDir			= 0
 DefaultMailServer		= localhost:25
-ServerThreads			= 10
 MaxKeepAlives			= 10
 KeepAliveTimeout		= 10
 MaxCachedProxyConnections	= 10
@@ -134,10 +101,6 @@ ProxyConnectionCacheTimeout	= 15
 HTTPThreadSize			= 280000
 HttpPrintWarningsInOutput	= 0
 Charset				= UTF-8
-;HTTPLogFile		        = logs/http.log
-MaintenancePage             	= atomic.html
-EnabledGzipContent          	= 1
-
 
 [AutoRepair]
 BadParentLinks			= 0
@@ -160,7 +123,7 @@ VDBDisconnectTimeout		= 1000
 KeepConnectionOnFixedThread	= 0
 
 [Replication]
-ServerName			= db-D602566B774E
+ServerName			= db-STARLING
 ServerEnable			= 1
 QueueMax			= 50000
 
@@ -212,7 +175,7 @@ Segment2			= 100M, db-seg2-1.db
 
 
 [Zero Config]
-ServerName			= virtuoso (D602566B774E)
+ServerName			= virtuoso (STARLING)
 ;ServerDSN			= ZDSN
 ;SSLServerName			= 
 ;SSLServerDSN			= 
@@ -227,7 +190,7 @@ ServerName			= virtuoso (D602566B774E)
 
 
 [URIQA]
-DynamicLocal			= 0
+DynamicLocal			= 1
 DefaultHost			= localhost:8890
 
 
@@ -236,16 +199,18 @@ DefaultHost			= localhost:8890
 ;ExternalXsltSource 		= 1
 ;DefaultGraph      		= http://localhost:8890/dataspace
 ;ImmutableGraphs    		= http://localhost:8890/dataspace
-ResultSetMaxRows           	= 10000
-MaxQueryCostEstimationTime 	= 400	; in seconds
+ResultSetMaxRows           	= 1000000
+;MaxQueryCostEstimationTime 	= 400	; in seconds -- original
+;MaxQueryExecutionTime      	= 360	; in seconds -- original
+MaxQueryCostEstimationTime 	= 90	; in seconds
 MaxQueryExecutionTime      	= 60	; in seconds
-DefaultQuery               	= select distinct ?Concept where {[] a ?Concept} LIMIT 100
+DefaultQuery               	= select distinct ?Concept where {[] a ?Concept}
 DeferInferenceRulesInit    	= 0  ; controls inference rules loading
 ;PingService       		= http://rpc.pingthesemanticweb.com/
 
 
 [Plugins]
-LoadPath			= /usr/local/virtuoso-opensource/lib/virtuoso/hosting
+LoadPath			= /var/local/virtuoso/lib/virtuoso/hosting
 Load1				= plain, wikiv
 Load2				= plain, mediawiki
 Load3				= plain, creolewiki
