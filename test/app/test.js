@@ -20,8 +20,13 @@ var DEBUG = false; // set true for debugging
 
 var problems = [
     "MDI2_indicSpecifications_and_related_rod_data",
+    "Energy consumption per country in thousand tonnes of oil equivalent 1999- (Eurostat ten00095)",
     "Change in Final Energy Consumption by Transport Mode, EEA33, 1990-2013",
-    "Change in Greenhouse gas emissions by EU Member State,2000,2011"
+    "Change in Greenhouse gas emissions by EU Member State,2000,2011",
+    "Contribution of anthropogenic sources to total emissions of CO2, CH4 and N2O in EU28 for 2012",
+    "Mapping between EUNIS and ESTAT fish species",
+    "Marine litter watch communities",
+    "Change of CO2 eq. emissions per main sectors"
     ];
 /*    "Simple SPARQL query on demo_gind",
     "SPARQL query on nrg_101a with joins on dictionaries",
@@ -53,8 +58,10 @@ var MAIN_QUERY_2 = 'PREFIX pt: <http://www.eea.europa.eu/portal_types/Sparql#> \
 	      } ORDER BY ?title '; // LIMIT 100
 
 var main_queries = [];
+
 main_queries.push(MAIN_QUERY);
 main_queries.push(MAIN_QUERY_2);
+
 
 var all_queries = []; // all queries resulted from main query
 var query_labels = {};
@@ -222,41 +229,34 @@ var modify_query_rows = function(query) {
 var step_counts = 1;
 var get_query_counts = function(item, callback) {
   // Executes modified query and saves number of rows
-  /*
-  if (item.label !== problem) {
-      // console.log("Skipping query");
-      return callback();
-  }
-  */
   
-  if (step_counts < 5 ) {
+  /*
+  if (step_counts < 3 ) {
     step_counts += 1;
     return callback();
   }
   step_counts = 1;
-  
+  */
   var result_query = modify_query_rows(item.query);
   //console.log('Start timeout:', Date.now());
   setTimeout(
-    call_server(
-      result_query, 
-      _endpoint, 
-      
-      function(response){ 
+    call_server,
+    1500,
+    result_query, 
+    _endpoint, 
+    function(response){ 
 	console.log("Processing query:", all_queries.indexOf(item) + 1, item.label);
 	//console.log('End timeout:', Date.now());
 	save_query_counts(item.query, response); 
 	return callback();
-      },
-      
-      function(errors){
-	console.log('Processing query:', all_queries.indexOf(item) + 1, errors.toString());
+    },
+    function(errors){
+	console.log('Processing query:', all_queries.indexOf(item) + 1, item.label, errors.toString());
 	//console.log('End timeout:', Date.now());
 	query_counts[item.query] = errors.toString();
 	return callback();
-      }
-    ),
-    1500
+    }
+    
   );
 };
 
@@ -277,36 +277,33 @@ var modify_query_for_columns = function(query) {
 var step_labels = 1;
 var get_query_labels = function(item, callback) {
   // Executes modified query and saves columns 
-  /*
-  if (item.label !== problem) {
-      // console.log("Skipping query");
-      return callback();
-  }
-  */
   
-  if (step_labels < 5) {
+  /*
+  if (step_labels < 3) {
     step_labels += 1;
     return callback();
   }
   step_labels = 1;
-  
+  */
   var result_query = modify_query_for_columns(item.query);
   
-  call_server(
-    result_query, 
-    _endpoint, 
-    
+  setTimeout(
+    call_server,
+    1500,
+    result_query,
+    _endpoint,
     function(response){ 
-      console.log('Processing query:', all_queries.indexOf(item) + 1, item.label);
-      save_query_label(item.query, response);
-      return callback();
+	console.log('Processing query:', all_queries.indexOf(item) + 1, item.label);
+	//console.log("SPARQL:", item.query);
+	save_query_label(item.query, response);
+	return callback();
     },
-    
     function(errors){
-      console.log('Processing query:', all_queries.indexOf(item) + 1, errors.toString());
-      query_labels[item.query] = [errors.toString()];
-      return callback();
+	console.log('Processing query:', all_queries.indexOf(item) + 1, errors.toString());
+	query_labels[item.query] = [errors.toString()];
+	return callback();
     }
+    
   );
 };
 
