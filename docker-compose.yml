@@ -11,7 +11,7 @@ datacrshared:
         - /var/tmp:/var/tmp
 
 virtuoso:
-    image: eeacms/virtuoso:dev
+    image: eeacms/virtuoso:latest
     ports:
         - 8890:8890
         - 1111:1111
