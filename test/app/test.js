@@ -26,7 +26,8 @@ var problems = [
     "Contribution of anthropogenic sources to total emissions of CO2, CH4 and N2O in EU28 for 2012",
     "Mapping between EUNIS and ESTAT fish species",
     "Marine litter watch communities",
-    "Change of CO2 eq. emissions per main sectors"
+    "Change of CO2 eq. emissions per main sectors",
+    "Shares of primary energy consumption by sector"
     ];
 /*    "Simple SPARQL query on demo_gind",
     "SPARQL query on nrg_101a with joins on dictionaries",
@@ -59,7 +60,7 @@ var MAIN_QUERY_2 = 'PREFIX pt: <http://www.eea.europa.eu/portal_types/Sparql#> \
 
 var main_queries = [];
 
-main_queries.push(MAIN_QUERY);
+//main_queries.push(MAIN_QUERY);
 main_queries.push(MAIN_QUERY_2);
 
 
@@ -131,7 +132,7 @@ var make_all_main_queries = function() {
     function(item, callback) {
       call_server(
 	item, 
-	_endpoint, 
+	"http://semantic.eea.europa.eu/sparql", 
 	
 	function(response){ 
 	  // console.log(item);
@@ -170,7 +171,7 @@ var get_filtered_queries = function(include_problems) {
   } else if(!include_problems) {
     for (var i = 0; i < all_queries.length; i++) {
       var q = all_queries[i];
-      if (problems.indexOf(q.label) == -1) {
+      if (problems.indexOf(q.label) === -1) {
 	  res.push(q);
       }
     }
@@ -184,22 +185,22 @@ var get_filtered_queries = function(include_problems) {
 
 var process_all_queries_step_1 = function(err) {
     // Process each query for saving number of rows
-  var filtered;
+  var filtered1;
 
-  filtered = get_filtered_queries(false);
+  filtered1 = get_filtered_queries(false);
 
   //console.log('all_queries length', filtered.length);
-  async.eachSeries(filtered, get_query_counts, process_all_queries_step_2);
+  async.eachSeries(filtered1, get_query_counts, process_all_queries_step_2);
 };
 
 
 var process_all_queries_step_2 = function(err) {
   // Process each query for saving columns
-  var filtered;
+  var filtered2;
 
-  filtered = get_filtered_queries(false);
+  filtered2 = get_filtered_queries(false);
 
-  async.eachSeries(filtered, get_query_labels, save_to_csv);
+  async.eachSeries(filtered2, get_query_labels, save_to_csv);
 };
 
 

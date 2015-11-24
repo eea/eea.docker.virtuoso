@@ -7,20 +7,20 @@
 
 ### Steps for usage
 
- 1. Run script:  ```./build_dev.sh```
- 2. Run command for creating container: 
+ - Run script:  ```./build_dev.sh```
+ - Run command for creating container: 
 
 ``` bash
-docker-compose -f docker-compose.dev.yml up
+$ docker-compose -f docker-compose.dev.yml up
 ```
 
- 3. Delete files from data container using:
+ - Delete files from data container using:
 
 ``` bash
-docker exec eeadockervirtuoso_virtuoso_1 find /virtuoso_db/ -type f ! -name '*.ini' -delete
+$ docker exec eeadockervirtuoso_virtuoso_1 find /virtuoso_db/ -type f ! -name '*.ini' -delete
 ```
 
- 4. Execute commands to copy database in data container:
+ - Execute commands to copy database in data container:
 
 ``` bash
 docker run --rm \
@@ -31,12 +31,20 @@ busybox \
   chown -R 500:500 /virtuoso_db"
 ```
 
- 5. Stop docker container ( CTRL-C )
- 6. Restart container using
+ - Stop docker container ( CTRL-C )
+ - Restart container using
  
-``` docker-compose -f docker-compose.dev.yml up --no-recreate```
+```$ docker-compose -f docker-compose.dev.yml up -d --no-recreate```
 
 ### Testing the Database Virtuoso
+
+For this you need to change folder in
+```
+cd test/
+```
+and run ```docker build .```
+
+
 
 For this you need to install NodeJS and sparql-client packages
 
