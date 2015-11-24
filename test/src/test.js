@@ -13,6 +13,10 @@ var stringify = require('csv-stringify');
 
 var args = process.argv.slice(2);
 
+var results_location = process.env.RESULTS_LOCATION
+if (results_location === undefined){
+    results_location = ""
+}
 var _endpoint = '';
 var _filename = '';
 
@@ -44,7 +48,7 @@ var MAIN_QUERY = 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> \
 		?bookmark a cr:SparqlBookmark ;\
 			  rdfs:label ?label ;\
 			  cr:sparqlQuery ?query \
-	      } ORDER BY ?label '; // LIMIT 150
+	      } ORDER BY ?label limit 1'; // LIMIT 150
 
 var MAIN_QUERY_2 = 'PREFIX pt: <http://www.eea.europa.eu/portal_types/Sparql#> \
 	      PREFIX dct: <http://purl.org/dc/terms/> \
@@ -56,12 +60,12 @@ var MAIN_QUERY_2 = 'PREFIX pt: <http://www.eea.europa.eu/portal_types/Sparql#> \
 		pt:endpoint_url ?endpoint; \
 		dct:title ?title \
 		FILTER regex(?endpoint, "semantic.eea.europa.eu") \
-	      } ORDER BY ?title '; // LIMIT 100
+	      } ORDER BY ?title limit 1'; // LIMIT 100
 
 var main_queries = [];
 
-//main_queries.push(MAIN_QUERY);
-main_queries.push(MAIN_QUERY_2);
+main_queries.push(MAIN_QUERY);
+//main_queries.push(MAIN_QUERY_2);
 
 
 var all_queries = []; // all queries resulted from main query
@@ -80,7 +84,7 @@ var init = function () {
   }
   
   _endpoint = args[0];  // "http://semantic.eea.europa.eu/sparql"; // 
-  _filename = args[1];  // "query_results"; // 
+  _filename = results_location + args[1];  // "query_results"; // 
 };
 
 
@@ -311,7 +315,6 @@ var get_query_labels = function(item, callback) {
 
 var save_query_counts = function(query, response) {
   // Saves the number of rows from parsed response
-
   if (!response || !response.results.bindings || response.results.bindings.length === 0) {
     query_counts[query] = 0;
     
@@ -369,7 +372,7 @@ var save_to_csv = function(error) {
 var save_csv_file = function(csv_rows) {
   // Saves the csv_rows in file
   var fs = require('fs');
-  
+
   fs.writeFile(_filename, csv_rows, function (err, data) {
     if (err) {
       return console.log(err);

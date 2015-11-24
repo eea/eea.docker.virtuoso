@@ -1,6 +1,8 @@
-app:
+test:
     # image: eeacms/virtuoso_test:dev
     build: .
+    environment:
+        - RESULTS_LOCATION=/test_results/
     volumes:
         - ./:/test_results
-    command: http://semantic.eea.europa.eu/sparql /test_results/query_results.csv
+
