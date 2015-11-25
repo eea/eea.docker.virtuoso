@@ -1,4 +1,4 @@
-## EEA Virtuoso Docker image for Semantic Data Service
+## EEA Virtuoso Docker image for Semantic Data Service / Content Registry
 
 ### 1.  Prerequisites
 
