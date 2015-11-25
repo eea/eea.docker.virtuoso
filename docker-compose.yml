@@ -6,7 +6,7 @@ datav:
 datacrshared:
     image: busybox
     volumes:
-        - /var/loval/cr3/files:/var/local/cr3/files
+        - /var/local/cr3/files:/var/local/cr3/files
         - /var/backups/sql:/var/backups/sql
         - /var/tmp:/var/tmp
 
