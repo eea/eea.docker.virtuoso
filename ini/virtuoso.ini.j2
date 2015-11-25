@@ -82,7 +82,7 @@ VADInstallDir			= /usr/local/virtuoso-opensource/share/virtuoso/vad/
 PrefixResultNames               = 0
 RdfFreeTextRulesSize		= 100
 IndexTreeMaps			= 256
-
+MaxQueryMem 		 	= {{ VIRTUOSO_MAX_QUERY_MEM | default('2G')}}
 
 
 [HTTPServer]
