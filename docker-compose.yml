@@ -12,7 +12,7 @@ datacrshared:
 
 virtuoso:
     restart: always
-    image: eeacms/virtuoso:latest
+    image: eeacms/virtuoso:7.2.1
     ports:
         - 8890:8890
         - 1111:1111

@@ -16,7 +16,8 @@ __2.2 Setting up shared folders, required for uploading files and harvesting rdf
 In order to work together with the eionet.contreg application, virtuoso needs some shared folders for temporary files and uploaded files.
 These settings are configured in 
 - virtuoso.env under the **VIRTUOSO_EXTRA_DIRS_ALLOWED**  
-- docker-compose.yml the **datacrshared** busybox
+- docker-compose.yml the **datacrshared** busybox  
+``` ```
 ### 3. Migrating existing data
 __3.1__ remove the default data
 ```

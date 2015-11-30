@@ -1,9 +1,9 @@
-FROM tenforce/virtuoso
+FROM tenforce/virtuoso:virtuoso-v7.2.0-1
 
 RUN apt-get update
-RUN apt-get install curl python -y
+RUN apt-get install wget python -y
 
-RUN curl "https://bootstrap.pypa.io/get-pip.py" -o "/tmp/get-pip.py"
+RUN wget "https://bootstrap.pypa.io/get-pip.py" -O "/tmp/get-pip.py"
 RUN python /tmp/get-pip.py
 RUN pip install j2cli
 
