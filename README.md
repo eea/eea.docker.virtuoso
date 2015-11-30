@@ -17,7 +17,7 @@ In order to work together with the eionet.contreg application, virtuoso needs so
 These settings are configured in 
 - virtuoso.env under the **VIRTUOSO_EXTRA_DIRS_ALLOWED**  
 - docker-compose.yml the **datacrshared** busybox  
-``` ```
+
 ### 3. Migrating existing data
 __3.1__ remove the default data
 ```
@@ -37,6 +37,7 @@ busybox \
 docker-compose stop
 docker-compose up -d --no-recreate
 ```
+
 ### 4. Development setup
 Build the virtuoso image locally:
 ```
