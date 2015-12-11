@@ -6,9 +6,9 @@ datav:
 datacrshared:
     image: busybox
     volumes: 
-        - /var/local/cr3/files:/var/local/cr3/files
-        - /var/backups/sql:/var/backups/sql
-        - /var/tmp:/var/tmp
+        - /var/local/cr3/files:/var/local/cr3/files:z
+        - /var/backups/sql:/var/backups/sql:z
+        - /var/tmp:/var/tmp:z
 
 virtuoso:
     image: eeacms/virtuoso:dev

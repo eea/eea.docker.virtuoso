@@ -18,6 +18,8 @@ These settings are configured in
 - virtuoso.env under the **VIRTUOSO_EXTRA_DIRS_ALLOWED**  
 - docker-compose.yml the **datacrshared** busybox  
 
+To set the virtuoso memory usage, some it needs to provide the correct values for **VIRTUOSO_NUMBEROFBUFFERS** and **VIRTUOSO_MAXDIRTYBUFFERS** according to the system memory of the hosting machine. Default values are set for a 4GB system memory.
+
 ### 3. Migrating existing data
 __3.1__ remove the default data
 ```

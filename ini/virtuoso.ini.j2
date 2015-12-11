@@ -64,9 +64,9 @@ O_DIRECT			= 0
 ;For a database-only server about 65% of available RAM could be configured for database buffers.
 ;Each buffer caches one 8K page of data and occupies approximately 8700 bytes of memory.
 ;NumberOfBuffers			= 5000
-NumberOfBuffers			= 680000
+NumberOfBuffers			= {{ VIRTUOSO_NUMBEROFBUFFERS | default('680000')}}
 ;MaxDirtyBuffers			= 3200
-MaxDirtyBuffers			= 500000
+MaxDirtyBuffers			= {{ VIRTUOSO_MAXDIRTYBUFFERS | default('500000')}}
 CaseMode			= 2
 MaxStaticCursorRows		= 5000
 CheckpointAuditTrail		= 0

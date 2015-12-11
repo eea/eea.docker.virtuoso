@@ -33,11 +33,6 @@ var problems = [
     "Change of CO2 eq. emissions per main sectors",
     "Shares of primary energy consumption by sector"
     ];
-/*    "Simple SPARQL query on demo_gind",
-    "SPARQL query on nrg_101a with joins on dictionaries",
-    "SPARQL query on namq_aux_pem with joins on dictionaries",
-    "Simple SPARQL query on tsdtr310",
- */
 
 
 var MAIN_QUERY = 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> \
