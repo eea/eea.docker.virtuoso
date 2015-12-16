@@ -10,26 +10,32 @@ __2.1 Getting the latest release up and running for the first time__
 ```
 git clone https://github.com/eea/eea.docker.virtuoso
 cd eea.docker.virtuoso
+```
+In order to configure the Virtuoso, one needs to rename the example file in virtuoso.ini and set the parameters to needed settings.
+
+```
 docker-compose up -d --no-recreate
 ```
 __2.2 Setting up shared folders, required for uploading files and harvesting rdfs__
-In order to work together with the eionet.contreg application, virtuoso needs some shared folders for temporary files and uploaded files.
-These settings are configured in 
-- virtuoso.env under the **VIRTUOSO_EXTRA_DIRS_ALLOWED**  
-- docker-compose.yml the **datacrshared** busybox  
+If you want to add a new location for the temporary folders or location for uploading files, just edit docker-compose file in virtuoso zone and in volumes sub-zone add a new folder mapped into corresponding folder from container, followed by :z access permission. For example:
+```
+- /var/tmp:/var/tmp:z
+```
+After, you need to specify the path folders in virtuoso.ini file on DirsAllowed parameters.
 
-To set the virtuoso memory usage, some it needs to provide the correct values for **VIRTUOSO_NUMBEROFBUFFERS** and **VIRTUOSO_MAXDIRTYBUFFERS** according to the system memory of the hosting machine. Default values are set for a 4GB system memory.
+If you need to modify the default path of temporary database, you can add a busybox data container with the needed path inside container and change the Databasefile parameter from Tempdatabase section from virtuoso.ini file.
+Or, if you want only a folder on host, add a volume in virtuoso container, mapped to specified folder, inside the docker-compose file.
 
 ### 3. Migrating existing data
 __3.1__ remove the default data
 ```
 docker exec eeadockervirtuoso_virtuoso_1 find /virtuoso_db/ -type f ! -name '*.ini' -delete
 ```
-__3.2__ copy the existing virtusos.db
+__3.2__ copy the existing virtuoso.db
 ```
 docker run --rm \
   --volumes-from eeadockervirtuoso_datav_1 \
-  --volume <mounted-data-folder>/virtuoso/var/lib/virtuoso/db/virtuoso.db:/restore/virtuoso.db:ro \
+  --volume <mounted-data-folder>/virtuoso.db:/restore/virtuoso.db:ro \
 busybox \
   sh -c "cp -r /restore/virtuoso.db /virtuoso_db && \
   chown -R 500:500 /virtuoso_db"
@@ -51,7 +57,7 @@ cp docker-compose.dev.yml.example docker-compose.dev.yml
 ```
 To start the application, use:
 ```
-docker-compose -f docker-compose.dev.yml up
+docker-compose -f docker-compose.dev.yml up -d --no-recreate
 ```
 You should be able to access it in a browser under http://localhost:8890
 

@@ -3,22 +3,16 @@ datav:
     volumes:
         - /virtuoso_db/
 
-datacrshared:
-    image: busybox
-    volumes:
-        - /var/local/cr3/files:/var/local/cr3/files
-        - /var/backups/sql:/var/backups/sql
-        - /var/tmp:/var/tmp
-
 virtuoso:
     restart: always
     image: eeacms/virtuoso:7.2.1 
     ports:
         - 8890:8890
         - 1111:1111
-        - 1112:1112
     volumes_from:
         - datav
-        - datacrshared
-    env_file:
-        - virtuoso.env
+    volumes:
+        - ./ini/virtuoso.ini:/usr/local/virtuoso-opensource/var/lib/virtuoso/db/virtuoso.ini:z
+        - /var/local/cr3/files:/var/local/cr3/files:z
+        - /var/backups/sql:/var/backups/sql:z
+        - /var/tmp:/var/tmp:z
