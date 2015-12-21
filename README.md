@@ -17,9 +17,13 @@ In order to configure the Virtuoso, one needs to rename the example file in virt
 docker-compose up -d --no-recreate
 ```
 __2.2 Setting up shared folders, required for uploading files and harvesting rdfs__
-If you want to add a new location for the temporary folders or location for uploading files, just edit docker-compose file in virtuoso zone and in volumes sub-zone add a new folder mapped into corresponding folder from container, followed by :z access permission. For example:
+
+To actually use a shared folder between Virtuoso and SDS / CR app, you have to modify the volumes from sharedvolumes zone in docker-compose file :
 ```
-- /var/tmp:/var/tmp:z
+    volumes:
+      - /folder_host/local/cr3/files:/shared_folder/local/cr3/files:z
+      - /folder_host/backups/sql:/shared_folder/backups/sql:z
+      - /folder_host/tmp:/shared_folder/tmp:z
 ```
 After, you need to specify the path folders in virtuoso.ini file on DirsAllowed parameters.
 

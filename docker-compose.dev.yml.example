@@ -1,7 +1,12 @@
-datav:
+shared_volumes:
     image: busybox
     volumes:
         - /virtuoso_db/
+        - ./virtuoso.ini:/usr/local/virtuoso-opensource/var/lib/virtuoso/db/virtuoso.ini:z
+        - /shared_folder/local/cr3/files:z
+        - /shared_folder/backups/sql:z
+        - /shared_folder/tmp:z
+
 
 #datacrshared:
 #    image: busybox
@@ -17,10 +22,4 @@ virtuoso:
         - 1111:1111
         - 1112:1112
     volumes_from:
-        - datav
-#        - datacrshared
-    volumes:
-        - ./virtuoso.ini:/usr/local/virtuoso-opensource/var/lib/virtuoso/db/virtuoso.ini:z
-        - /var/local/cr3/files:/var/local/cr3/files:z
-        - /var/backups/sql:/var/backups/sql:z
-        - /var/tmp:/var/tmp:z
+        - shared_volumes

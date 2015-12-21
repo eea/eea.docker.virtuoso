@@ -3,8 +3,7 @@
 cd /var/lib/virtuoso/db
 
 mkdir -p dumps
-
-#mv /virtuoso.ini . 2>/dev/null
+chown 500:500 ./dumps
 
 #if [ ! -f "/.dba_pwd_set" ];
 #then
