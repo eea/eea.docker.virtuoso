@@ -25,7 +25,7 @@ To actually use a shared folder between Virtuoso and SDS / CR app, you have to m
       - /folder_host/backups/sql:/shared_folder/backups/sql:z
       - /folder_host/tmp:/shared_folder/tmp:z
 ```
-After, you need to specify the path folders in virtuoso.ini file on DirsAllowed parameters.
+After, if needed, specify updated path folders in virtuoso.ini file on DirsAllowed parameters.
 
 If you need to modify the default path of temporary database, you can add a busybox data container with the needed path inside container and change the Databasefile parameter from Tempdatabase section from virtuoso.ini file.
 Or, if you want only a folder on host, add a volume in virtuoso container, mapped to specified folder, inside the docker-compose file.
