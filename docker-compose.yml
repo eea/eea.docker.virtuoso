@@ -1,11 +1,13 @@
-shared_volumes:
+virtuoso_data:
     image: busybox
+    tty: true
     volumes:
-        - /virtuoso_db/
+        - /virtuoso_db:/virtuoso_db:z
         - ./virtuoso.ini:/usr/local/virtuoso-opensource/var/lib/virtuoso/db/virtuoso.ini:z
-        - /shared_folder/local/cr3/files:z
-        - /shared_folder/backups/sql:z
-        - /shared_folder/tmp:z
+        - /var/local/cr3/files:/var/local/cr3/files:z
+        - /var/backups/sql:/var/backups/sql:z
+        - /var/tmp:/var/tmp:z
+    command: ["chown", "-v", "-R", "500:500", "/virtuoso_db"]
 
 virtuoso:
     restart: always
@@ -14,4 +16,4 @@ virtuoso:
         - 8890:8890
         - 1111:1111
     volumes_from:
-        - shared_volumes
+        - virtuoso_data
