@@ -1,5 +1,5 @@
 FROM centos:7
-MAINTAINER "Razvan Popa" <razvan.popa@eaudeweb.ro>
+MAINTAINER "EEA: IDM2 A-Team" <eea-edw-a-team-alerts@googlegroups.com>
 
 # Install Virtuoso prerequisites
 RUN buildDeps=" \
