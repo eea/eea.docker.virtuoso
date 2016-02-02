@@ -41,9 +41,6 @@ RUN buildDeps=" \
 ENV PATH /usr/local/virtuoso-opensource/bin/:$PATH
 ENV LANG en_US.UTF-8
 
-# Add dump_nquads_procedure
-ADD ./dump_nquads_procedure.sql /dump_nquads_procedure.sql
-
 # Add virtuoso group and user
 RUN mkdir -p /virtuoso_db && \
     groupadd -g 500 virtuoso && \
