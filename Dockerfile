@@ -1,5 +1,5 @@
 FROM centos:7
-MAINTAINER "EEA: IDM2 A-Team" <eea-edw-a-team-alerts@googlegroups.com>
+MAINTAINER "European Environment Agency (EEA): IDM2 A-Team" <eea-edw-a-team-alerts@googlegroups.com>
 
 # Install Virtuoso prerequisites
 RUN buildDeps=" \
