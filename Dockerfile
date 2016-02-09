@@ -24,8 +24,8 @@ RUN buildDeps=" \
         " \
         && set -x \
         && yum update -y && yum install -y $buildDeps \
-        && wget -O virtuoso-7.2.1.tar.gz http://sourceforge.net/projects/virtuoso/files/virtuoso/7.2.0/virtuoso-opensource-7.2.0_p1.tar.gz/download \
-        && tar -xvzf ./virtuoso-7.2.1.tar.gz && rm ./virtuoso-7.2.1.tar.gz \
+        && wget -O virtuoso-7.2.0.1.tar.gz http://sourceforge.net/projects/virtuoso/files/virtuoso/7.2.0/virtuoso-opensource-7.2.0_p1.tar.gz/download \
+        && tar -xvzf ./virtuoso-7.2.0.1.tar.gz && rm ./virtuoso-7.2.1.tar.gz \
         && cd virtuoso-opensource-7.2.0_p1/ \
         && ./autogen.sh \
         && ./configure \
