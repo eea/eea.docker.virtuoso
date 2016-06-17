@@ -24,16 +24,16 @@ RUN buildDeps=" \
         " \
         && set -x \
         && yum update -y && yum install -y $buildDeps \
-        && wget -O virtuoso-7.2.0.1.tar.gz http://sourceforge.net/projects/virtuoso/files/virtuoso/7.2.0/virtuoso-opensource-7.2.0_p1.tar.gz/download \
-        && tar -xvzf ./virtuoso-7.2.0.1.tar.gz && rm ./virtuoso-7.2.0.1.tar.gz \
-        && cd virtuoso-opensource-7.2.0_p1/ \
+        && wget -O virtuoso-7.2.4.2.tar.gz https://github.com/openlink/virtuoso-opensource/releases/download/v7.2.4.2/virtuoso-opensource-7.2.4.2.tar.gz \
+        && tar -xvzf ./virtuoso-7.2.4.2.tar.gz && rm ./virtuoso-7.2.4.2.tar.gz \
+        && cd virtuoso-opensource-7.2.4.2/ \
         && ./autogen.sh \
         && ./configure \
         && make && make install \
         && make clean \
         && ln -s /usr/local/virtuoso-opensource/var/lib/virtuoso/ /var/lib/virtuoso \
         && cd / \
-        && rm -r /virtuoso-opensource-7.2.0_p1 \
+        && rm -r /virtuoso-opensource-7.2.4.2 \
         && yum clean all
 #        && yum remove -y $buildDeps \
 
@@ -60,4 +60,4 @@ WORKDIR /var/lib/virtuoso/db
 EXPOSE 8890
 EXPOSE 1111
 
-CMD ["virtuoso-t", "+wait", "+foreground"]
+CMD ["virtuoso-t", "+wait", "+foreground", "+configfile /SDSdata/db/virtuoso_docker.ini"]

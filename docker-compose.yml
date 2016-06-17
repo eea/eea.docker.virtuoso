@@ -1,0 +1,15 @@
+v7242:
+    image: eeacms/virtuoso:dev
+    mem_limit: 5000m
+    memswap_limit: 8000m
+#    restart: always
+    volumes_from:
+        - sds_data
+    volumes:
+#        - /SDSdata/db/docker:/SDSdata/db
+        - /var/tmp:/var/tmp
+    ports:
+        - "8890:8890"
+        - "1111:1111"
+    command: virtuoso-t +wait +foreground +configfile /SDSdata/db/virtuoso_docker.ini
+
