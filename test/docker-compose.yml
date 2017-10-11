@@ -1,8 +1,0 @@
-test:
-    # image: eeacms/virtuoso_test:dev
-    build: .
-    environment:
-        - RESULTS_LOCATION=/test_results/
-    volumes:
-        - ./:/test_results
-
