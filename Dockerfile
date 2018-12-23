@@ -24,16 +24,16 @@ RUN buildDeps=" \
         " \
         && set -x \
         && yum update -y && yum install -y $buildDeps \
-        && wget -O virtuoso-7.2.4.2.tar.gz https://github.com/openlink/virtuoso-opensource/releases/download/v7.2.4.2/virtuoso-opensource-7.2.4.2.tar.gz \
-        && tar -xvzf ./virtuoso-7.2.4.2.tar.gz && rm ./virtuoso-7.2.4.2.tar.gz \
-        && cd virtuoso-opensource-7.2.4.2/ \
+        && wget -O virtuoso-7.2.5.tar.gz https://github.com/openlink/virtuoso-opensource/releases/download/v7.2.5/virtuoso-opensource-7.2.5.tar.gz \
+        && tar -xvzf ./virtuoso-7.2.5.tar.gz && rm ./virtuoso-7.2.5.tar.gz \
+        && cd virtuoso-opensource-7.2.5/ \
         && ./autogen.sh \
         && ./configure \
         && make && make install \
         && make clean \
         && ln -s /usr/local/virtuoso-opensource/var/lib/virtuoso/ /var/lib/virtuoso \
         && cd / \
-        && rm -r /virtuoso-opensource-7.2.4.2 \
+        && rm -r /virtuoso-opensource-7.2.5 \
         && yum clean all
 #        && yum remove -y $buildDeps \
 
